@@ -105,22 +105,36 @@
         directionalLight.shadow.camera.bottom = -50;
         scene.add(directionalLight);
         
-        // Colorful tiled ground
+        // Natural hexagonal ground
         const groundSize = 60;
-        const tileSize = 5;
+        const hexSize = 3; // Size of each hexagon
         const groundGroup = new THREE.Group();
         
-        // Create checkerboard pattern with colorful tiles
-        const tileColors = [0x7CFC00, 0x90EE90, 0x98FB98, 0x8FBC8F, 0x00FA9A];
-        for (let x = -groundSize/2; x < groundSize/2; x += tileSize) {
-            for (let z = -groundSize/2; z < groundSize/2; z += tileSize) {
-                const tileGeometry = new THREE.BoxGeometry(tileSize * 0.95, 0.2, tileSize * 0.95);
-                const colorIndex = Math.abs((Math.floor(x/tileSize) + Math.floor(z/tileSize))) % tileColors.length;
-                const tileMaterial = new THREE.MeshToonMaterial({ 
-                    color: tileColors[colorIndex]
+        // Create a natural color palette
+        const tileColors = [0x6B8E23, 0x556B2F, 0x8FBC8F, 0x2E8B57, 0x3CB371];
+
+        const hexHeight = Math.sqrt(3) * hexSize;
+        const hexWidth = 2 * hexSize;
+
+        for (let q = -15; q <= 15; q++) {
+            for (let r = -15; r <= 15; r++) {
+                const x = hexWidth * 0.75 * q;
+                const z = hexHeight * (r + q / 2);
+
+                // Ensure tiles are within a circular radius for a more organic shape
+                if (Math.sqrt(x*x + z*z) > groundSize / 2) continue;
+
+                const hexGeometry = new THREE.CylinderGeometry(hexSize, hexSize, 0.3, 6);
+                const tileMaterial = new THREE.MeshToonMaterial({
+                    color: tileColors[Math.floor(Math.random() * tileColors.length)]
                 });
-                const tile = new THREE.Mesh(tileGeometry, tileMaterial);
-                tile.position.set(x + tileSize/2, -2, z + tileSize/2);
+
+                const tile = new THREE.Mesh(hexGeometry, tileMaterial);
+
+                // Rotate to make it a flat-topped hexagon
+                tile.rotation.y = Math.PI / 2;
+
+                tile.position.set(x, -2, z);
                 tile.receiveShadow = true;
                 tile.castShadow = true;
                 groundGroup.add(tile);
