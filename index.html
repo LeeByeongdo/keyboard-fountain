@@ -65,10 +65,88 @@
             50% { transform: scale(1.5) rotate(10deg); }
             100% { transform: scale(1) rotate(0deg); opacity: 0; }
         }
+
+        #settings-button {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 40px;
+            cursor: pointer;
+            z-index: 101;
+            transition: transform 0.3s;
+        }
+
+        #settings-button:hover {
+            transform: rotate(45deg);
+        }
+
+        #settings-panel {
+            position: absolute;
+            top: 90px;
+            right: 20px;
+            width: 250px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border: 4px solid #FFB6C1;
+            z-index: 100;
+            transform: translateX(0);
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        #settings-panel.hidden {
+            transform: translateX(150%);
+        }
+
+        #settings-panel h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 22px;
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        #song-selection label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #555;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 10px;
+            transition: background-color 0.2s;
+        }
+
+        #song-selection label:hover {
+            background-color: #f0f0f0;
+        }
+
+        #song-selection input {
+            margin-right: 15px;
+            transform: scale(1.2);
+        }
     </style>
 </head>
 <body>
     <div id="instructions">🎹 아무 키나 눌러보세요! 🌊</div>
+    <div id="settings-button">⚙️</div>
+    <div id="settings-panel" class="hidden">
+        <h3>🎶 음악 선택 🎶</h3>
+        <div id="song-selection">
+            <label>
+                <input type="radio" name="song" value="Twinkle Star" checked>
+                반짝반짝 작은별
+            </label>
+            <label>
+                <input type="radio" name="song" value="Three Bears">
+                곰 세 마리
+            </label>
+        </div>
+    </div>
     <canvas id="canvas"></canvas>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -431,14 +509,21 @@
         }).toDestination();
         
         // Note mapping for keyboard
-        const notes = [
-            'C4', 'C4', 'G4', 'G4', 'A4', 'A4', 'G4',
-            'F4', 'F4', 'E4', 'E4', 'D4', 'D4', 'C4',
-            'G4', 'G4', 'F4', 'F4', 'E4', 'E4', 'D4',
-            'G4', 'G4', 'F4', 'F4', 'E4', 'E4', 'D4',
-            'C4', 'C4', 'G4', 'G4', 'A4', 'A4', 'G4',
-            'F4', 'F4', 'E4', 'E4', 'D4', 'D4', 'C4'
-        ];
+        const songs = {
+            'Twinkle Star': [
+                'C4', 'C4', 'G4', 'G4', 'A4', 'A4', 'G4', 'F4', 'F4', 'E4', 'E4', 'D4', 'D4', 'C4',
+                'G4', 'G4', 'F4', 'F4', 'E4', 'E4', 'D4', 'G4', 'G4', 'F4', 'F4', 'E4', 'E4', 'D4',
+                'C4', 'C4', 'G4', 'G4', 'A4', 'A4', 'G4', 'F4', 'F4', 'E4', 'E4', 'D4', 'D4', 'C4'
+            ],
+            'Three Bears': [
+                'C4', 'C4', 'C4', 'C4', 'E4', 'G4', 'G4', 'E4', 'C4',
+                'G4', 'G4', 'E4', 'C4', 'C4', 'C4',
+                'G4', 'G4', 'G4', 'G4', 'A4', 'A4', 'G4',
+                'F4', 'F4', 'E4', 'E4', 'D4', 'D4', 'C4'
+            ]
+        };
+        let currentSongName = 'Twinkle Star';
+        let currentNotes = songs[currentSongName];
         let currentNoteIndex = 0;
         
         // Color palette
@@ -574,11 +659,11 @@
             }
             
             // Play sound
-            const note = notes[currentNoteIndex];
+            const note = currentNotes[currentNoteIndex];
             synth.triggerAttackRelease(note, "8n");
             
             // Move to the next note
-            currentNoteIndex = (currentNoteIndex + 1) % notes.length;
+            currentNoteIndex = (currentNoteIndex + 1) % currentNotes.length;
 
             // Create water jet across the entire screen
             // Map screen coordinates to 3D world coordinates
@@ -605,6 +690,23 @@
             }, 500);
         });
         
+        // Settings Panel Logic
+        const settingsButton = document.getElementById('settings-button');
+        const settingsPanel = document.getElementById('settings-panel');
+
+        settingsButton.addEventListener('click', () => {
+            settingsPanel.classList.toggle('hidden');
+        });
+
+        const songSelection = document.getElementById('song-selection');
+        songSelection.addEventListener('change', (event) => {
+            if (event.target.name === 'song') {
+                currentSongName = event.target.value;
+                currentNotes = songs[currentSongName];
+                currentNoteIndex = 0; // Reset note index
+            }
+        });
+
         // Animation loop
         function animate() {
             requestAnimationFrame(animate);
